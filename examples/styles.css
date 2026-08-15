@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: #f6f8fa url('./pic.svg') right 16px top 16px / 48px no-repeat;
+  color: #1f2328;
+}
+
+main {
+  max-width: 40rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: white;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+}
+
+h1 {
+  color: #1a7f37;
+}

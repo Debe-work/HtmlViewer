@@ -1,0 +1,82 @@
+import { describe, expect, it } from 'vitest'
+import {
+  fileName,
+  githubWebUrl,
+  isHtmlPath,
+  parseGithubUrl,
+  parentPath,
+  repoHref,
+} from './parseGithubUrl.ts'
+
+describe('parseGithubUrl', () => {
+  it('parses owner/repo shorthand', () => {
+    expect(parseGithubUrl('twbs/bootstrap')).toEqual({
+      owner: 'twbs',
+      repo: 'bootstrap',
+      view: 'tree',
+    })
+  })
+
+  it('parses a blob URL to preview for html files', () => {
+    expect(
+      parseGithubUrl('https://github.com/twbs/bootstrap/blob/v5.3.3/site/src/index.html'),
+    ).toEqual({
+      owner: 'twbs',
+      repo: 'bootstrap',
+      ref: 'v5.3.3',
+      path: 'site/src/index.html',
+      view: 'preview',
+    })
+  })
+
+  it('parses a tree URL', () => {
+    expect(parseGithubUrl('https://github.com/facebook/react/tree/main/fixtures')).toEqual({
+      owner: 'facebook',
+      repo: 'react',
+      ref: 'main',
+      path: 'fixtures',
+      view: 'tree',
+    })
+  })
+
+  it('parses raw.githubusercontent.com URLs from any repo', () => {
+    expect(
+      parseGithubUrl(
+        'https://raw.githubusercontent.com/mdn/content/main/files/en-us/web/html/index.md',
+      ),
+    ).toEqual({
+      owner: 'mdn',
+      repo: 'content',
+      ref: 'main',
+      path: 'files/en-us/web/html/index.md',
+      view: 'blob',
+    })
+  })
+
+  it('returns null for non-github hosts', () => {
+    expect(parseGithubUrl('https://gitlab.com/foo/bar/-/blob/main/index.html')).toBeNull()
+  })
+})
+
+describe('path helpers', () => {
+  it('detects html paths', () => {
+    expect(isHtmlPath('docs/index.html')).toBe(true)
+    expect(isHtmlPath('docs/page.HTM')).toBe(true)
+    expect(isHtmlPath('src/app.tsx')).toBe(false)
+  })
+
+  it('builds in-app and github urls', () => {
+    expect(repoHref({ owner: 'twbs', repo: 'bootstrap', ref: 'main', path: 'index.html', view: 'preview' })).toBe(
+      '/r/twbs/bootstrap?ref=main&path=index.html&view=preview',
+    )
+    expect(
+      githubWebUrl({ owner: 'twbs', repo: 'bootstrap', ref: 'main', path: 'index.html', view: 'preview' }),
+    ).toBe('https://github.com/twbs/bootstrap/blob/main/index.html')
+  })
+
+  it('computes parent paths', () => {
+    expect(parentPath('docs/guide/index.html')).toBe('docs/guide')
+    expect(parentPath('index.html')).toBe('')
+    expect(fileName('docs/guide/index.html')).toBe('index.html')
+  })
+})
