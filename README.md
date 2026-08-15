@@ -6,8 +6,8 @@ GitHub 上の **任意のリポジトリ** にある HTML を、スマホから�
 
 ## できること
 
-- `owner/repo` や GitHub の blob/raw URL を貼って、このリポジトリ以外の HTML も開く
-- リポジトリをフォルダ単位でブラウズし、`.html` をタップして描画
+- `owner/repo` や GitHub / Gist の blob/raw URL を貼って、このリポジトリ以外の HTML も開く
+- リポジトリをフォルダ単位でブラウズし、`.html` をタップして描画。プレビューからソース表示に切り替え可能
 - 相対パスの CSS / JS / 画像を解決してプレビュー
 - 任意の GitHub PAT をブラウザの localStorage に保存して private リポジトリや API 制限緩和に使う
 
@@ -22,8 +22,10 @@ GitHub は raw HTML を `text/plain` で返すため、ブラウザは描画し�
 GitHub のファイル画面から飛ばすブックマークレット:
 
 ```js
-javascript:void(location.href='https://debe-work.github.io/HtmlViewer/#/open?url='+encodeURIComponent(location.href))
+javascript:void(location.href='https://debe-work.github.io/HtmlViewer/#/preview?url='+encodeURIComponent(location.href))
 ```
+
+ディープリンク形式は `#/preview?url=<github-or-gist-url>` です。
 
 このリポジトリのサンプル:
 

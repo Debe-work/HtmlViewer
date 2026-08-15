@@ -56,6 +56,30 @@ describe('parseGithubUrl', () => {
   it('returns null for non-github hosts', () => {
     expect(parseGithubUrl('https://gitlab.com/foo/bar/-/blob/main/index.html')).toBeNull()
   })
+
+  it('parses gist.github.com HTML files', () => {
+    expect(
+      parseGithubUrl('https://gist.github.com/niutech/2f7c5e78d50ca5f42804#file-index-html'),
+    ).toEqual({
+      owner: 'niutech',
+      repo: '2f7c5e78d50ca5f42804',
+      path: 'index.html',
+      view: 'preview',
+      gist: true,
+    })
+  })
+
+  it('parses gist.githubusercontent.com raw files', () => {
+    expect(
+      parseGithubUrl('https://gist.githubusercontent.com/octocat/abc123/raw/hello.html'),
+    ).toEqual({
+      owner: 'octocat',
+      repo: 'abc123',
+      path: 'hello.html',
+      view: 'preview',
+      gist: true,
+    })
+  })
 })
 
 describe('path helpers', () => {
@@ -69,6 +93,9 @@ describe('path helpers', () => {
     expect(repoHref({ owner: 'twbs', repo: 'bootstrap', ref: 'main', path: 'index.html', view: 'preview' })).toBe(
       '/r/twbs/bootstrap?ref=main&path=index.html&view=preview',
     )
+    expect(
+      repoHref({ owner: 'octocat', repo: 'abc123', path: 'hello.html', view: 'preview', gist: true }),
+    ).toBe('/gist/abc123?file=hello.html&view=preview')
     expect(
       githubWebUrl({ owner: 'twbs', repo: 'bootstrap', ref: 'main', path: 'index.html', view: 'preview' }),
     ).toBe('https://github.com/twbs/bootstrap/blob/main/index.html')

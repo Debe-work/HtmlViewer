@@ -6,6 +6,7 @@ export type GithubTarget = {
   ref?: string
   path?: string
   view: ViewMode
+  gist?: boolean
 }
 
 const GITHUB_HOSTS = new Set(['github.com', 'www.github.com'])
@@ -32,6 +33,10 @@ export function parseGithubUrl(input: string): GithubTarget | null {
     url = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`)
   } catch {
     return null
+  }
+
+  if (url.hostname === 'gist.github.com' || url.hostname === 'gist.githubusercontent.com') {
+    return parseGistUrl(url)
   }
 
   if (url.hostname === 'raw.githubusercontent.com') {
@@ -84,6 +89,43 @@ function parseGithubPathParts(parts: string[]): GithubTarget | null {
   return { owner, repo, view: 'tree' }
 }
 
+function parseGistUrl(url: URL): GithubTarget | null {
+  const parts = url.pathname.split('/').filter(Boolean)
+  if (url.hostname === 'gist.githubusercontent.com') {
+    if (parts.length < 4 || parts[2] !== 'raw') return null
+    const [owner, gistId] = parts
+    const path = parts.length >= 5 ? parts.slice(4).join('/') : parts[3]
+    return {
+      owner,
+      repo: gistId,
+      path,
+      view: isHtmlPath(path) ? 'preview' : 'blob',
+      gist: true,
+    }
+  }
+
+  if (parts.length === 0) return null
+  const owner = parts.length >= 2 ? parts[0] : 'anonymous'
+  const gistId = parts.length >= 2 ? parts[1] : parts[0]
+  if (!/^[a-f0-9]+$/i.test(gistId)) return null
+  const path = gistFileFromHash(url.hash)
+  return {
+    owner,
+    repo: gistId,
+    path,
+    view: path ? (isHtmlPath(path) ? 'preview' : 'blob') : 'tree',
+    gist: true,
+  }
+}
+
+function gistFileFromHash(hash: string): string | undefined {
+  if (!hash.startsWith('#file-')) return undefined
+  const slug = hash.slice('#file-'.length)
+  if (slug.endsWith('-html')) return `${slug.slice(0, -'-html'.length)}.html`
+  if (slug.endsWith('-htm')) return `${slug.slice(0, -'-htm'.length)}.htm`
+  return slug
+}
+
 function isGithubName(value: string): boolean {
   return /^[\w.-]+$/.test(value)
 }
@@ -94,8 +136,15 @@ export function repoHref(target: {
   ref?: string
   path?: string
   view?: ViewMode
+  gist?: boolean
 }): string {
   const params = new URLSearchParams()
+  if (target.gist) {
+    if (target.path) params.set('file', target.path)
+    if (target.view && target.view !== 'tree') params.set('view', target.view)
+    const query = params.toString()
+    return `/gist/${encodeURIComponent(target.repo)}${query ? `?${query}` : ''}`
+  }
   if (target.ref) params.set('ref', target.ref)
   if (target.path) params.set('path', target.path)
   if (target.view && target.view !== 'tree') params.set('view', target.view)
@@ -109,7 +158,12 @@ export function githubWebUrl(target: {
   ref?: string
   path?: string
   view?: ViewMode
+  gist?: boolean
 }): string {
+  if (target.gist) {
+    const base = `https://gist.github.com/${target.owner}/${target.repo}`
+    return target.path ? `${base}#file-${target.path.replace(/\./g, '-')}` : base
+  }
   const ref = target.ref ?? 'HEAD'
   if (!target.path) {
     return `https://github.com/${target.owner}/${target.repo}/tree/${ref}`

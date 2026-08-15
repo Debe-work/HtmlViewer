@@ -72,8 +72,14 @@ a {
 .app-header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
 .app-title {

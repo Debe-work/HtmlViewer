@@ -206,6 +206,25 @@ export async function fetchFileText(
   return await response.text()
 }
 
+export type GistFile = {
+  filename: string
+  content: string
+  raw_url: string
+  size: number
+}
+
+export type GithubGist = {
+  id: string
+  owner: { login: string } | null
+  files: Record<string, GistFile>
+  html_url: string
+}
+
+export async function getGist(id: string, signal?: AbortSignal): Promise<GithubGist> {
+  const response = await githubFetch(`${API}/gists/${encodeURIComponent(id)}`, { signal })
+  return (await response.json()) as GithubGist
+}
+
 export function defaultViewForPath(path: string, type: GithubContent['type']): 'tree' | 'blob' | 'preview' {
   if (type === 'dir') return 'tree'
   return isHtmlPath(path) ? 'preview' : 'blob'

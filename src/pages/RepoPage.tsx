@@ -249,14 +249,22 @@ function PreviewPane({
         title={fileName(path) || 'preview'}
         backTo={repoHref({ owner, repo, ref: refName, path: parentPath(path), view: 'tree' })}
         extra={
-          <a
-            className="text-link"
-            href={githubWebUrl({ owner, repo, ref: refName, path, view: 'preview' })}
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
+          <div className="header-actions">
+            <Link
+              className="text-link"
+              to={repoHref({ owner, repo, ref: refName, path, view: 'blob' })}
+            >
+              ソース
+            </Link>
+            <a
+              className="text-link"
+              href={githubWebUrl({ owner, repo, ref: refName, path, view: 'preview' })}
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </a>
+          </div>
         }
       />
       {preview.status === 'loading' ? <StatusMessage>HTML を組み立てています...</StatusMessage> : null}
@@ -270,7 +278,7 @@ function PreviewPane({
           ref={iframeRef}
           className="preview-frame"
           title="HTML preview"
-          sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+          sandbox="allow-scripts allow-forms allow-popups"
           referrerPolicy="no-referrer"
         />
       ) : null}
@@ -310,14 +318,24 @@ function BlobPane({
         title={fileName(path) || 'file'}
         backTo={repoHref({ owner, repo, ref: refName, path: parentPath(path), view: 'tree' })}
         extra={
-          <a
-            className="text-link"
-            href={githubWebUrl({ owner, repo, ref: refName, path, view: 'blob' })}
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
+          <div className="header-actions">
+            {isHtmlPath(path) ? (
+              <Link
+                className="text-link"
+                to={repoHref({ owner, repo, ref: refName, path, view: 'preview' })}
+              >
+                プレビュー
+              </Link>
+            ) : null}
+            <a
+              className="text-link"
+              href={githubWebUrl({ owner, repo, ref: refName, path, view: 'blob' })}
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </a>
+          </div>
         }
       />
       <main className="page-body">

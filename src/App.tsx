@@ -1,4 +1,5 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { GistPage } from './pages/GistPage.tsx'
 import { HomePage } from './pages/HomePage.tsx'
 import { OpenPage } from './pages/OpenPage.tsx'
 import { RepoPage } from './pages/RepoPage.tsx'
@@ -10,7 +11,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/preview" element={<OpenPage />} />
         <Route path="/open" element={<OpenPage />} />
+        <Route path="/gist/:gistId" element={<GistPage />} />
         <Route path="/r/:owner/:repo" element={<RepoPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
