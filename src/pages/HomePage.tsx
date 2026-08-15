@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AppHeader } from '../components/AppHeader.tsx'
 import { ErrorMessage, StatusMessage } from '../components/Status.tsx'
-import { listUserRepos, searchRepos, type GithubRepo } from '../lib/github.ts'
+import { listUserRepos, refineGithubTarget, searchRepos, type GithubRepo } from '../lib/github.ts'
 import { parseGithubUrl, repoHref } from '../lib/parseGithubUrl.ts'
 import { getRecents } from '../lib/recents.ts'
 import { getToken } from '../lib/token.ts'
@@ -36,7 +36,7 @@ export function HomePage() {
     },
   )
 
-  const onSubmit = (event: FormEvent) => {
+  const onSubmit = async (event: FormEvent) => {
     event.preventDefault()
     const target = parseGithubUrl(input)
     if (!target) {
@@ -44,7 +44,8 @@ export function HomePage() {
       return
     }
     setParseError('')
-    navigate(repoHref(target))
+    const refined = await refineGithubTarget(target)
+    navigate(repoHref(refined))
   }
 
   return (

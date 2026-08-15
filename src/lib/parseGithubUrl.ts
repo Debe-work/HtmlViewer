@@ -185,3 +185,25 @@ export function fileName(path: string): string {
   const index = trimmed.lastIndexOf('/')
   return index === -1 ? trimmed : trimmed.slice(index + 1)
 }
+
+export function splitRefAndPath(rest: string, branchNames: string[]): { ref: string; path: string } {
+  const names = [...branchNames].sort((a, b) => b.length - a.length)
+  const match = names.find((name) => rest === name || rest.startsWith(`${name}/`))
+  if (!match) {
+    const slash = rest.indexOf('/')
+    return slash === -1 ? { ref: rest, path: '' } : { ref: rest.slice(0, slash), path: rest.slice(slash + 1) }
+  }
+  const path = rest.slice(match.length).replace(/^\//, '')
+  return { ref: match, path }
+}
+
+export function applyBranchNames(target: GithubTarget, branchNames: string[]): GithubTarget {
+  if (target.gist || !target.ref) return target
+  const rest = target.path ? `${target.ref}/${target.path}` : target.ref
+  const { ref, path } = splitRefAndPath(rest, branchNames)
+  let view: ViewMode = target.view
+  if (!path) view = 'tree'
+  else if (target.view === 'tree') view = 'tree'
+  else view = isHtmlPath(path) ? 'preview' : 'blob'
+  return { ...target, ref, path: path || undefined, view }
+}

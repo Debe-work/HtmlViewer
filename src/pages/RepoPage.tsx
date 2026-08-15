@@ -278,7 +278,7 @@ function PreviewPane({
           ref={iframeRef}
           className="preview-frame"
           title="HTML preview"
-          sandbox="allow-scripts allow-forms allow-popups"
+          sandbox="allow-scripts allow-forms allow-popups allow-top-navigation-by-user-activation"
           referrerPolicy="no-referrer"
         />
       ) : null}

@@ -6,6 +6,7 @@ import {
   parseGithubUrl,
   parentPath,
   repoHref,
+  splitRefAndPath,
 } from './parseGithubUrl.ts'
 
 describe('parseGithubUrl', () => {
@@ -105,5 +106,16 @@ describe('path helpers', () => {
     expect(parentPath('docs/guide/index.html')).toBe('docs/guide')
     expect(parentPath('index.html')).toBe('')
     expect(fileName('docs/guide/index.html')).toBe('index.html')
+  })
+
+  it('splits slashy branch names using known branches', () => {
+    const split = splitRefAndPath('cursor/github-html-viewer-1ed8/examples/index.html', [
+      'main',
+      'cursor/github-html-viewer-1ed8',
+    ])
+    expect(split).toEqual({
+      ref: 'cursor/github-html-viewer-1ed8',
+      path: 'examples/index.html',
+    })
   })
 })

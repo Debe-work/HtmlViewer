@@ -1,5 +1,5 @@
 import { getToken } from './token.ts'
-import { isHtmlPath } from './parseGithubUrl.ts'
+import { applyBranchNames, isHtmlPath, type GithubTarget } from './parseGithubUrl.ts'
 
 const API = 'https://api.github.com'
 
@@ -223,6 +223,22 @@ export type GithubGist = {
 export async function getGist(id: string, signal?: AbortSignal): Promise<GithubGist> {
   const response = await githubFetch(`${API}/gists/${encodeURIComponent(id)}`, { signal })
   return (await response.json()) as GithubGist
+}
+
+export async function refineGithubTarget(
+  target: GithubTarget,
+  signal?: AbortSignal,
+): Promise<GithubTarget> {
+  if (target.gist || !target.ref) return target
+  try {
+    const branches = await listBranches(target.owner, target.repo, signal)
+    return applyBranchNames(
+      target,
+      branches.map((branch) => branch.name),
+    )
+  } catch {
+    return target
+  }
 }
 
 export function defaultViewForPath(path: string, type: GithubContent['type']): 'tree' | 'blob' | 'preview' {
