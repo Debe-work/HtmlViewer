@@ -15,6 +15,14 @@ export function isHtmlPath(path: string): boolean {
   return /\.html?$/i.test(path)
 }
 
+export function isMarkdownPath(path: string): boolean {
+  return /\.(md|markdown)$/i.test(path)
+}
+
+export function isPreviewablePath(path: string): boolean {
+  return isHtmlPath(path) || isMarkdownPath(path)
+}
+
 export function isImagePath(path: string): boolean {
   return /\.(png|jpe?g|gif|webp|svg|ico|bmp|avif)$/i.test(path)
 }
@@ -50,7 +58,7 @@ export function parseGithubUrl(input: string): GithubTarget | null {
       repo,
       ref,
       path: path || undefined,
-      view: path ? (isHtmlPath(path) ? 'preview' : 'blob') : 'tree',
+      view: path ? (isPreviewablePath(path) ? 'preview' : 'blob') : 'tree',
     }
   }
 
@@ -82,7 +90,7 @@ function parseGithubPathParts(parts: string[]): GithubTarget | null {
       repo,
       ref,
       path: path || undefined,
-      view: path && isHtmlPath(path) ? 'preview' : 'blob',
+      view: path && isPreviewablePath(path) ? 'preview' : 'blob',
     }
   }
 
@@ -99,7 +107,7 @@ function parseGistUrl(url: URL): GithubTarget | null {
       owner,
       repo: gistId,
       path,
-      view: isHtmlPath(path) ? 'preview' : 'blob',
+      view: isPreviewablePath(path) ? 'preview' : 'blob',
       gist: true,
     }
   }
@@ -113,7 +121,7 @@ function parseGistUrl(url: URL): GithubTarget | null {
     owner,
     repo: gistId,
     path,
-    view: path ? (isHtmlPath(path) ? 'preview' : 'blob') : 'tree',
+    view: path ? (isPreviewablePath(path) ? 'preview' : 'blob') : 'tree',
     gist: true,
   }
 }
@@ -123,6 +131,8 @@ function gistFileFromHash(hash: string): string | undefined {
   const slug = hash.slice('#file-'.length)
   if (slug.endsWith('-html')) return `${slug.slice(0, -'-html'.length)}.html`
   if (slug.endsWith('-htm')) return `${slug.slice(0, -'-htm'.length)}.htm`
+  if (slug.endsWith('-markdown')) return `${slug.slice(0, -'-markdown'.length)}.markdown`
+  if (slug.endsWith('-md')) return `${slug.slice(0, -'-md'.length)}.md`
   return slug
 }
 
@@ -204,6 +214,6 @@ export function applyBranchNames(target: GithubTarget, branchNames: string[]): G
   let view: ViewMode = target.view
   if (!path) view = 'tree'
   else if (target.view === 'tree') view = 'tree'
-  else view = isHtmlPath(path) ? 'preview' : 'blob'
+  else view = isPreviewablePath(path) ? 'preview' : 'blob'
   return { ...target, ref, path: path || undefined, view }
 }

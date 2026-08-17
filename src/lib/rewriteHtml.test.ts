@@ -65,4 +65,27 @@ describe('rewriteHtml', () => {
     expect(rewritten).toContain('target="_parent"')
     expect(rewritten).not.toContain('Content-Security-Policy')
   })
+
+  it('rewrites markdown links to in-app preview urls', async () => {
+    const html = `<!doctype html>
+<html>
+  <body>
+    <a href="./guide.md">guide</a>
+    <img src="./pic.svg" />
+  </body>
+</html>`
+
+    const rewritten = await rewriteHtml(html, {
+      filePath: 'docs/README.md',
+      fetchText: async () => {
+        throw new Error('unexpected fetch')
+      },
+      resolveMediaUrl: (path) => `https://raw.example/${path}`,
+      rewriteHtmlHref: (path) => `#/preview/${path}`,
+    })
+
+    expect(rewritten).toContain('href="#/preview/docs/guide.md"')
+    expect(rewritten).toContain('target="_parent"')
+    expect(rewritten).toContain('src="https://raw.example/docs/pic.svg"')
+  })
 })

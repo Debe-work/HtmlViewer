@@ -15,13 +15,15 @@ import {
 import {
   fileName,
   githubWebUrl,
-  isHtmlPath,
   isImagePath,
+  isMarkdownPath,
+  isPreviewablePath,
   parentPath,
   repoHref,
   type ViewMode,
 } from '../lib/parseGithubUrl.ts'
 import { addRecent } from '../lib/recents.ts'
+import { renderMarkdown } from '../lib/renderMarkdown.ts'
 import { rewriteHtml } from '../lib/rewriteHtml.ts'
 import { getToken } from '../lib/token.ts'
 import { useAsync } from '../lib/useAsync.ts'
@@ -117,7 +119,7 @@ function TreePane({
         repo,
         ref: refName,
         path: file.path,
-        view: isHtmlPath(file.path) ? 'preview' : 'blob',
+        view: isPreviewablePath(file.path) ? 'preview' : 'blob',
       }),
       { replace: true },
     )
@@ -208,7 +210,8 @@ function PreviewPane({
     blobUrls.current.forEach((url) => URL.revokeObjectURL(url))
     blobUrls.current = []
     const html = await fetchFileText(owner, repo, refName, path, signal)
-    return rewriteHtml(html, {
+    const documentHtml = isMarkdownPath(path) ? renderMarkdown(html) : html
+    return rewriteHtml(documentHtml, {
       filePath: path,
       fetchText: (repoPath) => fetchFileText(owner, repo, refName, repoPath, signal),
       resolveMediaUrl: async (repoPath) => {
@@ -224,7 +227,7 @@ function PreviewPane({
           repo,
           ref: refName,
           path: repoPath,
-          view: isHtmlPath(repoPath) ? 'preview' : 'blob',
+          view: isPreviewablePath(repoPath) ? 'preview' : 'blob',
         })
         return `${window.location.origin}${window.location.pathname}#${hash}`
       },
@@ -267,7 +270,7 @@ function PreviewPane({
           </div>
         }
       />
-      {preview.status === 'loading' ? <StatusMessage>HTML を組み立てています...</StatusMessage> : null}
+      {preview.status === 'loading' ? <StatusMessage>プレビューを組み立てています...</StatusMessage> : null}
       {preview.status === 'error' ? (
         <main className="page-body">
           <ErrorMessage>{preview.error.message}</ErrorMessage>
@@ -277,7 +280,7 @@ function PreviewPane({
         <iframe
           ref={iframeRef}
           className="preview-frame"
-          title="HTML preview"
+          title="preview"
           sandbox="allow-scripts allow-forms allow-popups allow-top-navigation-by-user-activation"
           referrerPolicy="no-referrer"
         />
@@ -319,7 +322,7 @@ function BlobPane({
         backTo={repoHref({ owner, repo, ref: refName, path: parentPath(path), view: 'tree' })}
         extra={
           <div className="header-actions">
-            {isHtmlPath(path) ? (
+            {isPreviewablePath(path) ? (
               <Link
                 className="text-link"
                 to={repoHref({ owner, repo, ref: refName, path, view: 'preview' })}

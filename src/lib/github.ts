@@ -1,5 +1,5 @@
 import { getToken } from './token.ts'
-import { applyBranchNames, isHtmlPath, type GithubTarget } from './parseGithubUrl.ts'
+import { applyBranchNames, isPreviewablePath, type GithubTarget } from './parseGithubUrl.ts'
 
 const API = 'https://api.github.com'
 
@@ -243,5 +243,5 @@ export async function refineGithubTarget(
 
 export function defaultViewForPath(path: string, type: GithubContent['type']): 'tree' | 'blob' | 'preview' {
   if (type === 'dir') return 'tree'
-  return isHtmlPath(path) ? 'preview' : 'blob'
+  return isPreviewablePath(path) ? 'preview' : 'blob'
 }

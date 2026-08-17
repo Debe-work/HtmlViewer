@@ -1,3 +1,5 @@
+import { isPreviewablePath } from './parseGithubUrl.ts'
+
 export function resolveRepoPath(fromFile: string, href: string): string | null {
   const value = href.trim()
   if (!value) return null
@@ -196,7 +198,7 @@ export async function rewriteHtml(html: string, options: RewriteHtmlOptions): Pr
     if (!href) continue
     const repoPath = resolveRepoPath(options.filePath, href)
     if (!repoPath) continue
-    if (isHtmlHref(href) || isHtmlPath(repoPath)) {
+    if (isPreviewableHref(href) || isPreviewablePath(repoPath)) {
       anchor.setAttribute('href', options.rewriteHtmlHref(repoPath))
       anchor.setAttribute('target', '_parent')
     } else {
@@ -230,11 +232,7 @@ async function rewriteSrcset(value: string, options: RewriteHtmlOptions): Promis
   return parts.join(', ')
 }
 
-function isHtmlHref(href: string): boolean {
+function isPreviewableHref(href: string): boolean {
   const withoutHash = href.split('#')[0].split('?')[0]
-  return isHtmlPath(withoutHash)
-}
-
-function isHtmlPath(path: string): boolean {
-  return /\.html?$/i.test(path)
+  return isPreviewablePath(withoutHash)
 }

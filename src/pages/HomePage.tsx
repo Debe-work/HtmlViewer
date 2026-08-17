@@ -53,7 +53,7 @@ export function HomePage() {
       <AppHeader title="HTML Viewer" />
       <main className="page-body">
         <p className="lede">
-          GitHub 上の任意の HTML を、ダウンロードやサーバホストなしでプレビューします。このアプリのリポジトリに限らず、public
+          GitHub 上の任意の HTML / Markdown を、ダウンロードやサーバホストなしでプレビューします。このアプリのリポジトリに限らず、public
           な owner/repo ならそのまま開けます。
         </p>
         <form className="open-form" onSubmit={onSubmit}>
