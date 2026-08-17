@@ -3,7 +3,8 @@ import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { AppHeader } from '../components/AppHeader.tsx'
 import { ErrorMessage, StatusMessage } from '../components/Status.tsx'
 import { getGist, type GistFile } from '../lib/github.ts'
-import { fileName, githubWebUrl, isHtmlPath, repoHref, type ViewMode } from '../lib/parseGithubUrl.ts'
+import { fileName, githubWebUrl, isMarkdownPath, isPreviewablePath, repoHref, type ViewMode } from '../lib/parseGithubUrl.ts'
+import { renderMarkdown } from '../lib/renderMarkdown.ts'
 import { rewriteHtml } from '../lib/rewriteHtml.ts'
 import { useAsync } from '../lib/useAsync.ts'
 
@@ -49,7 +50,7 @@ export function GistPage() {
     )
   }
 
-  if (!file && files.length === 1 && isHtmlPath(files[0].filename)) {
+  if (!file && files.length === 1 && isPreviewablePath(files[0].filename)) {
     return (
       <Navigate
         to={repoHref({
@@ -64,7 +65,7 @@ export function GistPage() {
     )
   }
 
-  if (selected && view === 'preview' && isHtmlPath(selected.filename)) {
+  if (selected && view === 'preview' && isPreviewablePath(selected.filename)) {
     return <GistPreview owner={owner} gistId={gistId} files={gist.data.files} selected={selected} />
   }
 
@@ -80,7 +81,7 @@ export function GistPage() {
               gistId={gistId}
               path={selected.filename}
               view="blob"
-              html={isHtmlPath(selected.filename)}
+              previewable={isPreviewablePath(selected.filename)}
             />
           }
         />
@@ -114,7 +115,7 @@ export function GistPage() {
                   owner,
                   repo: gistId,
                   path: item.filename,
-                  view: isHtmlPath(item.filename) ? 'preview' : 'blob',
+                  view: isPreviewablePath(item.filename) ? 'preview' : 'blob',
                   gist: true,
                 })}
               >
@@ -141,8 +142,11 @@ function GistPreview({
   selected: GistFile
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const preview = useAsync(`gist-preview:${gistId}/${selected.filename}`, async () =>
-    rewriteHtml(selected.content, {
+  const preview = useAsync(`gist-preview:${gistId}/${selected.filename}`, async () => {
+    const documentHtml = isMarkdownPath(selected.filename)
+      ? renderMarkdown(selected.content)
+      : selected.content
+    return rewriteHtml(documentHtml, {
       filePath: selected.filename,
       fetchText: async (repoPath) => {
         const match = files[fileName(repoPath)] ?? files[repoPath]
@@ -158,13 +162,13 @@ function GistPreview({
           owner,
           repo: gistId,
           path: fileName(repoPath),
-          view: isHtmlPath(repoPath) ? 'preview' : 'blob',
+          view: isPreviewablePath(repoPath) ? 'preview' : 'blob',
           gist: true,
         })
         return `${window.location.origin}${window.location.pathname}#${hash}`
       },
-    }),
-  )
+    })
+  })
 
   useEffect(() => {
     if (preview.status !== 'ok' || !iframeRef.current) return
@@ -176,9 +180,9 @@ function GistPreview({
       <AppHeader
         title={selected.filename}
         backTo={repoHref({ owner, repo: gistId, gist: true })}
-        extra={<HeaderExtras owner={owner} gistId={gistId} path={selected.filename} view="preview" html />}
+        extra={<HeaderExtras owner={owner} gistId={gistId} path={selected.filename} view="preview" previewable />}
       />
-      {preview.status === 'loading' ? <StatusMessage>HTML を組み立てています...</StatusMessage> : null}
+      {preview.status === 'loading' ? <StatusMessage>プレビューを組み立てています...</StatusMessage> : null}
       {preview.status === 'error' ? (
         <main className="page-body">
           <ErrorMessage>{preview.error.message}</ErrorMessage>
@@ -188,7 +192,7 @@ function GistPreview({
         <iframe
           ref={iframeRef}
           className="preview-frame"
-          title="HTML preview"
+          title="preview"
           sandbox="allow-scripts allow-forms allow-popups allow-top-navigation-by-user-activation"
           referrerPolicy="no-referrer"
         />
@@ -202,17 +206,17 @@ function HeaderExtras({
   gistId,
   path,
   view,
-  html,
+  previewable,
 }: {
   owner: string
   gistId: string
   path: string
   view: ViewMode
-  html?: boolean
+  previewable?: boolean
 }) {
   return (
     <div className="header-actions">
-      {html ? (
+      {previewable ? (
         <Link
           className="text-link"
           to={repoHref({

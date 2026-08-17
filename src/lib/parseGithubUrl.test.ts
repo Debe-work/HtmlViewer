@@ -3,6 +3,8 @@ import {
   fileName,
   githubWebUrl,
   isHtmlPath,
+  isMarkdownPath,
+  isPreviewablePath,
   parseGithubUrl,
   parentPath,
   repoHref,
@@ -30,6 +32,18 @@ describe('parseGithubUrl', () => {
     })
   })
 
+  it('parses a blob URL to preview for markdown files', () => {
+    expect(
+      parseGithubUrl('https://github.com/facebook/react/blob/main/README.md'),
+    ).toEqual({
+      owner: 'facebook',
+      repo: 'react',
+      ref: 'main',
+      path: 'README.md',
+      view: 'preview',
+    })
+  })
+
   it('parses a tree URL', () => {
     expect(parseGithubUrl('https://github.com/facebook/react/tree/main/fixtures')).toEqual({
       owner: 'facebook',
@@ -50,7 +64,7 @@ describe('parseGithubUrl', () => {
       repo: 'content',
       ref: 'main',
       path: 'files/en-us/web/html/index.md',
-      view: 'blob',
+      view: 'preview',
     })
   })
 
@@ -70,6 +84,18 @@ describe('parseGithubUrl', () => {
     })
   })
 
+  it('parses gist.github.com Markdown files', () => {
+    expect(
+      parseGithubUrl('https://gist.github.com/octocat/2f7c5e78d50ca5f42804#file-readme-md'),
+    ).toEqual({
+      owner: 'octocat',
+      repo: '2f7c5e78d50ca5f42804',
+      path: 'readme.md',
+      view: 'preview',
+      gist: true,
+    })
+  })
+
   it('parses gist.githubusercontent.com raw files', () => {
     expect(
       parseGithubUrl('https://gist.githubusercontent.com/octocat/abc123/raw/hello.html'),
@@ -84,10 +110,16 @@ describe('parseGithubUrl', () => {
 })
 
 describe('path helpers', () => {
-  it('detects html paths', () => {
+  it('detects html and markdown paths', () => {
     expect(isHtmlPath('docs/index.html')).toBe(true)
     expect(isHtmlPath('docs/page.HTM')).toBe(true)
     expect(isHtmlPath('src/app.tsx')).toBe(false)
+    expect(isMarkdownPath('README.md')).toBe(true)
+    expect(isMarkdownPath('notes.MARKDOWN')).toBe(true)
+    expect(isMarkdownPath('src/app.tsx')).toBe(false)
+    expect(isPreviewablePath('docs/index.html')).toBe(true)
+    expect(isPreviewablePath('README.md')).toBe(true)
+    expect(isPreviewablePath('src/app.tsx')).toBe(false)
   })
 
   it('builds in-app and github urls', () => {
